@@ -1,40 +1,127 @@
 <html>
-    <head>
-        <style>
-            .countdown-timer {
-                margin: auto;
-                text-align: center;
-            }
 
-            h1 {
-                font-size: 80px;
-            }
+<head>
+    <style>
+        .countdown-timer {
+            margin: auto;
+            text-align: center;
+            background-size: contain;
+        }
 
-            h2 {
-                font-size: 60px;
+        h1 {
+            font-size: 80px;
+        }
+
+        h2 {
+            font-size: 60px;
+        }
+    </style>
+    <script>
+        const defaultBackgroundImage = "https://images.unsplash.com/photo-1569470451072-68314f596aec?q=80&w=1931"
+        ""
+
+        function getStartingIndex(largest_unit){
+            switch(largest_unit){
+                case "D":
+                    return 0;
+                case "H":
+                    return 1;
+                case "M":
+                    return 2;
+                case "S":
+                    return 3;
+                default:
+                    return 0;
             }
-        </style>
-        <script>
-            var countDownDate = new Date({{.DestinationTime}}).getTime();
-            var x = setInterval(function() {
-                var now = new Date().getTime();
-                var distance = countDownDate - now;
-                var days = Math.floor(distance / (1000 * 60 * 60 * 24));
-                var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-                document.getElementById("countdown").innerHTML = days + " days, " + hours + " hours, " + minutes + " minutes, " + seconds + " seconds";
-                if (distance < 0) {
-                    clearInterval(x);
-                    document.getElementById("countdown").innerHTML = "DONE!";
+        }
+        function countdownOutput(largest_unit, d, h, m, s){
+            switch(largest_unit){
+                case "D":
+                    return `${d}:${h}:${m}:${s}`;
+                case "H":
+                    return `${h}:${m}:${s}`;
+                case "M":
+                    return `${m}:${s}`;
+                case "S":
+                    return `${s}`;
+                default:
+                    return `${d}:${h}:${m}:${s}`;
+            }
+        }
+        function getQueryVariable(variable) {
+            var query = window.location.search.substring(1);
+            var vars = query.split("&");
+            for (var i = 0; i < vars.length; i++) {
+                var pair = vars[i].split("=");
+                if (pair[0] == variable) {
+                    return decodeURI(pair[1]);
                 }
-            }, 1000);
-        </script>
-    </head>
-    <body>
-        <div class="countdown-timer">
-            <h1>Time until {{ .DestinationEvent }}</h1>
-            <h2 id="countdown"></h2>
-        </div>
-    </body>
-</html>
+            }
+            alert('Query Variable ' + variable + ' not found');
+        }
+        var largestUnitForCountdown = getQueryVariable("largestunit");
+        largestUnitForCountdown = largestUnitForCountdown ? largestUnitForCountdown : "D"
+        var destinationTime = parseInt(getQueryVariable("time"));
+        destinationTime = destinationTime ? destinationTime : 1735707600; // unix timestamp of 2025 in S
+        var destinationEvent = getQueryVariable("title");
+        destinationEvent = destinationEvent ? destinationEvent : "Placeholder";
+        var fontColor = getQueryVariable("fontcolor");
+        fontColor = fontColor ? fontColor : "white";
+        var backgroundImage = getQueryVariable("backgroundimage");
+        backgroundImage = backgroundImage ? backgroundImage : defaultBackgroundImage;
+        console.log(backgroundImage);
+        
+        //console.log(largestUnitForCountdown + " " + destinationTime + " " + destinationEvent);
+
+        var units = ["D", "H", "M", "S"];
+        var starting_index = getStartingIndex(largestUnitForCountdown);
+        var result = ["", "", "", ""];
+        
+        // MS to Days, MS to Hours, MS to M, MS to S
+        var conversions = [24*60*60*1000, 60*60*1000, 60*1000, 1000];
+
+        var countDownDate = new Date(destinationTime*1000).getTime();
+        console.log(countDownDate)
+        var x = setInterval(function () {
+            var now = new Date().getTime();
+            console.log(now);
+            var distance = countDownDate - now;
+            if(distance > 0){
+                for(let i=starting_index; i<units.length;i++){
+                    result[i] = Math.floor(distance / conversions[i]);
+                    distance -= conversions[i]*result[i];
+                    result[i] = result[i] > 99 ? result[i].toString() : ("00" + result[i]).slice (-2);
+                }
+                console.log(result)
+            }
+            countdownElement = document.getElementById("countdown");
+            countdownElement.innerHTML = countdownOutput(largestUnitForCountdown, result[0], result[1], result[2], result[3]);
+            if (distance < 0) {
+                clearInterval(x);
+                countdownElement.innerHTML = "DONE!";
+            }
+        }, 1000);
+        
+    </script>
+</head>
+
+<body>
+    <div class="countdown-timer">
+        <h1 id="countdowntitle">Countdown</h1>
+        <h2 class="countdown" id="countdown"></h2>
+    </div>
+</body>
+
+<script>
+    var title = document.getElementById("countdowntitle");
+        if(title){
+            title.innerHTML = destinationEvent;
+        }
+    var countdownDivElement = document.getElementsByClassName("countdown-timer")[0];
+    console.log(countdownDivElement);
+    if (countdownDivElement){
+        countdownDivElement.style.color = fontColor;
+        countdownDivElement.style.backgroundImage="url("+backgroundImage+")";
+    }
+</script>
+

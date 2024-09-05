@@ -6,7 +6,7 @@ ADD . /app
 
 WORKDIR /app
 
-RUN go build -o countdown-timer
+RUN go build -o countdown-timer main.go
 
 EXPOSE 8080
 
